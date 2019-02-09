@@ -41,6 +41,10 @@ class BaseModel(object):
             grads = tf.gradients(loss, var_list)
             # [tf.summary.histogram('gradient/' + var.name, grad, 
             #  collections=['train']) for grad, var in zip(grads, var_list)]
-            return opt.apply_gradients(zip(grads, var_list))
+            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            with tf.control_dependencies(update_ops):
+                train_op = opt.apply_gradients(zip(grads, var_list))
+
+            return train_op
 
 

@@ -4,9 +4,9 @@
 # Author: Qian Ge <geqian1001@gmail.com>
 
 import os
-from datetime import datetime
-import numpy as np
 import imageio
+import numpy as np
+from datetime import datetime
 # import scipy.misc
 
 import src.utils.utils as utils
