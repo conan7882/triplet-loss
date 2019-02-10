@@ -10,7 +10,8 @@ import sys
 import skimage.transform
 sys.path.append('../')
 from src.dataflow.mnist import MNISTData
-from src.dataflow.mars import MARS
+from src.dataflow.mars import MARSTriplet, MARSChild
+from src.dataflow.testset import prepare_query_gallery
 
 
 def loadMNIST(data_dir='', sample_per_class=12):
@@ -46,8 +47,7 @@ def loadMARS(data_dir='', sample_per_class=4, rescale_im=[128, 64]):
         return np.clip(im/255.0, 0., 1.)
 
     train_dir = os.path.join(data_dir, 'bbox_train')
-    train_data = MARS(
-        'train',
+    train_data = MARSTriplet(
         n_class=None,
         data_dir=train_dir,
         batch_dict_name=['im', 'label'],
@@ -56,14 +56,23 @@ def loadMARS(data_dir='', sample_per_class=4, rescale_im=[128, 64]):
     train_data.setup(epoch_val=0, sample_n_class=32, sample_per_class=sample_per_class)
 
     valid_dir = os.path.join(data_dir, 'bbox_test')
-    valid_data = MARS(
-        'test',
-        n_class=None,
+    # valid_data = MARSTriplet(
+    #     'test',
+    #     n_class=None,
+    #     data_dir=valid_dir,
+    #     batch_dict_name=['im', 'label'],
+    #     shuffle=True,
+    #     pf=normalize_im)
+    # valid_data.setup(epoch_val=0, sample_n_class=32, sample_per_class=sample_per_class)
+
+    query_data, gallery_data = prepare_query_gallery(
+        TripletDataFlow=MARSTriplet,
+        ChildDataFlow=MARSChild,
         data_dir=valid_dir,
         batch_dict_name=['im', 'label'],
         shuffle=True,
-        pf=normalize_im)
-    valid_data.setup(epoch_val=0, sample_n_class=32, sample_per_class=sample_per_class)
+        pf=normalize_im,
+        query_ratio=0.3)
 
-    return train_data, valid_data
+    return train_data, query_data, gallery_data
     

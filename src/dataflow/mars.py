@@ -8,13 +8,23 @@ import gzip
 import struct
 import numpy as np 
 import src.utils.dataflow as dfutil
-from src.dataflow.base import DataflowBase
+from src.dataflow.base import DataflowBaseTriplet, DataflowBaseChild
 
 
-class MARS(DataflowBase):
+class MARSChild(DataflowBaseChild):
+    def _read_batch_im(self, batch_file_list):
+
+        im_list = []
+        for file_name in batch_file_list:
+            im = dfutil.load_image(file_name, read_channel=3, pf=self._pf)
+            im_list.append(im)
+
+        return im_list
+
+
+class MARSTriplet(DataflowBaseTriplet):
     def __init__(self,
-                 name,
-                 n_class,
+                 n_class=None,
                  data_dir='',
                  batch_dict_name=None,
                  shuffle=True,
@@ -23,13 +33,12 @@ class MARS(DataflowBase):
 
         n_class = 10 # temp
 
-        super(MARS, self).__init__(
+        super(MARSTriplet, self).__init__(
             n_class=n_class,
             data_dir=data_dir,
             batch_dict_name=batch_dict_name,
             shuffle=shuffle,
             pf=pf)
-
 
     def _prepare_data(self):
         class_folder = [f_name for f_name in os.listdir(self._data_dir) if os.path.isdir(os.path.join(self._data_dir, f_name))]
@@ -40,7 +49,7 @@ class MARS(DataflowBase):
             file_list = dfutil.get_file_list(os.path.join(self._data_dir, folder_name), '.jpg')
             self.im_list[label_id] = np.array(file_list)
 
-        self._suffle_files()
+        self._shuffle_files()
 
     def next_batch(self):
         class_id_list = np.arange(self._n_class)
@@ -64,7 +73,7 @@ class MARS(DataflowBase):
             if self._image_id[class_id] > self.size(class_id):
                 self._epochs_completed[class_id] += 1
                 self._image_id[class_id] = 0
-                self._suffle_files(class_id)
+                self._shuffle_files(class_id)
 
         return [np.array(batch_im_all), np.array(batch_label_all)]
 

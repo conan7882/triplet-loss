@@ -3,6 +3,7 @@
 # File: main.py
 # Author: Qian Ge <geqian1001@gmail.com>
 
+import os
 import argparse
 import tensorflow as tf
 
@@ -17,6 +18,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--train', action='store_true')
     parser.add_argument('--dataset', type=str, default='mnist')
+    parser.add_argument('--folder', type=str, default='test')
     parser.add_argument('--lr', type=float, default=1e-4)
     return parser.parse_args()
 
@@ -45,9 +47,11 @@ def train_mnist():
 
 def train_mars():
     FLAGS = get_args()
+    save_path = os.path.join(config.mars_save_path, FLAGS.folder)
+
     embedding_dim = 128
     im_size = [128, 64]
-    margin = 0.2
+    margin = 0.5
 
     train_data, valid_data = loader.loadMARS(config.mars_dir, sample_per_class=4, rescale_im=im_size)
 
@@ -57,7 +61,7 @@ def train_mars():
     # infer_net = LuNet(im_size=im_size, n_channels=3, embedding_dim=embedding_dim, margin=0.5)
     # infer_net.create_inference_model()
 
-    writer = tf.summary.FileWriter(config.mars_save_path)
+    writer = tf.summary.FileWriter(save_path)
     saver = tf.train.Saver()
     sessconfig = tf.ConfigProto()
     sessconfig.gpu_options.allow_growth = True
@@ -68,7 +72,7 @@ def train_mars():
             train_net.train_steps(sess, train_data, init_lr=FLAGS.lr, t0=15000, t1=25000, max_step=100, summary_writer=writer)
             # infer_net.inference_epoch(sess, valid_data, save_path=config.mars_save_path)
             if epoch_id % 50 == 0:
-                saver.save(sess, '{}mars_step_{}'.format(config.mars_save_path, epoch_id*100))
+                saver.save(sess, '{}/mars_step_{}'.format(save_path, epoch_id*100))
 
 if __name__ == '__main__':
     FLAGS = get_args()

@@ -9,10 +9,13 @@ import config
 
 def test_dataflow():
     import matplotlib.pyplot as plt
-    dataflow, valid_data = loader.loadMARS(config.mars_dir)
-    batch_data = dataflow.next_batch_dict()
-    print(batch_data)
-    print(batch_data['im'].shape)
+    train_data, query_data, gallery_data = loader.loadMARS(config.mars_dir)
+
+    print(query_data.label_list)
+    print(gallery_data.label_list)
+    batch_data = gallery_data.next_batch_dict()
+    # print(batch_data)
+    # print(batch_data['im'].shape)
     plt.figure()
     plt.imshow(batch_data['im'][0])
     plt.show()

@@ -8,13 +8,13 @@ import gzip
 import struct
 import numpy as np 
 import src.utils.dataflow as dfutil
-from src.dataflow.base import DataflowBase
+from src.dataflow.base import DataflowBaseTriplet
 
 
-class MNISTData(DataflowBase):
+class MNISTData(DataflowBaseTriplet):
     def __init__(self,
                  name,
-                 n_class,
+                 n_class=10,
                  data_dir='',
                  batch_dict_name=None,
                  shuffle=True,
