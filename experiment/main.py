@@ -37,7 +37,7 @@ def train():
     with tf.Session(config=sessconfig) as sess:
         sess.run(tf.global_variables_initializer())
         writer.add_graph(sess.graph)
-        for epoch_id in range(100):
+        for epoch_id in range(50):
             train_net.train_epoch(sess, train_data, lr=FLAGS.lr, summary_writer=None)
             infer_net.inference_epoch(sess, valid_data, save_path=config.mnist_save_path)
 

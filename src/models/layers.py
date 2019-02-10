@@ -70,13 +70,13 @@ def softmax(logits, axis=-1, name='softmax'):
  
         return tf.exp(stable_in) / normal_p
 
-def leaky_relu(x, leak=0.2, name='LeakyRelu'):
+def leaky_relu(x, leak=0.3, name='LeakyRelu'):
     """ 
     leaky_relu 
         Allow a small non-zero gradient when the unit is not active
     Args:
         x (tf.tensor): a tensor 
-        leak (float): Default to 0.2
+        leak (float): Default to 0.3
     Returns:
         tf.tensor with name 'name'
     """

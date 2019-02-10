@@ -71,7 +71,7 @@ def _get_mask(label, mask_type):
             raise ValueError('Wrong mask_type: {}'.format(mask_type))
         return tf.cast(mask, tf.float32)
 
-def hard_triplet_loss(embedding, label, margin):
+def batch_hard_triplet_loss(embedding, label, margin):
     with tf.name_scope('hard_mining'):
         pair_wise_d = pair_wise_distance(embedding) # [bsize, bsize]
 

@@ -6,6 +6,10 @@
 import imageio
 import numpy as np
 import tensorflow as tf
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 
 def viz_batch_im(batch_im, grid_size, save_path,
@@ -87,3 +91,35 @@ def display(global_step,
         summary_writer.add_summary(s, global_step)
         if summary_val is not None:
             summary_writer.add_summary(summary_val, global_step)
+
+def viz_embedding(embedding, labels, save_dir):
+            
+    labels = labels.astype(int)
+    classes = set(labels)
+
+    plt.figure()
+    kwargs = {'alpha': 0.8}
+    colormap = plt.cm.rainbow(np.linspace(0, 1, len(classes)))
+    kwargs['c'] = [colormap[i] for i in labels]
+
+    # make room for legend
+    ax = plt.subplot(111, aspect='equal')
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    handles = [mpatches.Circle((0,0), label=class_, color=colormap[i])
+                for i, class_ in enumerate(classes)]
+    ax.legend(handles=handles, shadow=True, bbox_to_anchor=(1.05, 0.45),
+              fancybox=True, loc='center left')
+
+
+    plt.scatter(embedding[:,0], embedding[:,1], s=2, **kwargs)
+    plt.savefig(save_dir, bbox_inches="tight")
+    plt.close()
+
+# def tensorboard_embedding(embedding, writer):
+#     from tensorflow.contrib.tensorboard.plugins import projector
+
+#     config = projector.ProjectorConfig()
+#     embedding = config.embeddings.add()
+#     embedding.tensor_name = embedding_var.name
+
