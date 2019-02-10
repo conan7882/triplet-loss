@@ -3,12 +3,14 @@
 # File: loader.py
 # Author: Qian Ge <geqian1001@gmail.com>
 
-
+import os
 import platform
 import numpy as np
 import sys
+import skimage.transform
 sys.path.append('../')
 from src.dataflow.mnist import MNISTData
+from src.dataflow.mars import MARS
 
 
 def loadMNIST(data_dir='', sample_per_class=12):
@@ -34,3 +36,34 @@ def loadMNIST(data_dir='', sample_per_class=12):
     valid_data.setup(epoch_val=0, sample_n_class=10, sample_per_class=sample_per_class)
 
     return train_data, valid_data
+
+def loadMARS(data_dir='', sample_per_class=4, rescale_im=[128, 64]):
+    def normalize_im(im):
+        im = skimage.transform.resize(
+            im, rescale_im,
+            mode='constant', preserve_range=True)
+
+        return np.clip(im/255.0, 0., 1.)
+
+    train_dir = os.path.join(data_dir, 'bbox_train')
+    train_data = MARS(
+        'train',
+        n_class=None,
+        data_dir=train_dir,
+        batch_dict_name=['im', 'label'],
+        shuffle=True,
+        pf=normalize_im)
+    train_data.setup(epoch_val=0, sample_n_class=32, sample_per_class=sample_per_class)
+
+    valid_dir = os.path.join(data_dir, 'bbox_test')
+    valid_data = MARS(
+        'test',
+        n_class=None,
+        data_dir=valid_dir,
+        batch_dict_name=['im', 'label'],
+        shuffle=True,
+        pf=normalize_im)
+    valid_data.setup(epoch_val=0, sample_n_class=32, sample_per_class=sample_per_class)
+
+    return train_data, valid_data
+    

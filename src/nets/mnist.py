@@ -43,7 +43,7 @@ class MetricNet(BaseModel):
         """ create graph for training """
         self.set_is_training(True)
         self._create_train_input()
-        self.embedding = self._creat_model(self.image)
+        self.embedding = self._create_model(self.image)
 
         self.train_op = self.get_train_op()
         self.loss_op = self.get_loss()
@@ -65,20 +65,20 @@ class MetricNet(BaseModel):
         """ create graph for inference """
         self.set_is_training(False)
         self._create_inference_input()
-        self.embedding = self._creat_model(self.image)
+        self.embedding = self._create_model(self.image)
 
         self.epoch_id = 0
         # self.loss_op = self.get_loss()
 
     def _get_loss(self):
         with tf.name_scope('loss'):
-            loss = batch_hard_triplet_loss(self.embedding, self.label, self.margin)
+            loss, _ = batch_hard_triplet_loss(self.embedding, self.label, self.margin)
             return loss
 
     def _get_optimizer(self):
         return tf.train.AdamOptimizer(self.lr)
         
-    def _creat_model(self, inputs):
+    def _create_model(self, inputs):
         self.layers['cur_input'] = inputs
 
         with tf.variable_scope('embedding_net', reuse=tf.AUTO_REUSE):
@@ -88,10 +88,10 @@ class MetricNet(BaseModel):
                            is_training=self.is_training, wd=WD):
 
                 L.conv(filter_size=5, out_dim=32, nl=tf.nn.relu, padding='SAME', name='conv1')
-                L.max_pool(padding='SAME', name='max_pool1')
+                L.max_pool(layer_dict=self.layers, padding='SAME', name='max_pool1')
 
                 L.conv(filter_size=5, out_dim=64, nl=tf.nn.relu, padding='SAME', name='conv2')
-                L.max_pool(padding='SAME', name='max_pool2')
+                L.max_pool(layer_dict=self.layers, padding='SAME', name='max_pool2')
 
                 L.linear(out_dim=256, name='linear1', nl=tf.nn.relu,)
                 L.linear(out_dim=self.embedding_dim, bn=False, name='linear2')

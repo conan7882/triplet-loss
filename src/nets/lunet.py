@@ -17,7 +17,7 @@ INIT_W = tf.keras.initializers.he_normal()
 WD = 0
 
 class LuNet(BaseModel):
-    def __init__(self, im_size, n_channels, embedding_dim, margin):
+    def __init__(self, im_size, n_channels, embedding_dim=128, margin=0.5):
         im_size = L.get_shape2D(im_size)
         self.im_h, self.im_w = im_size
         self.n_channels = n_channels
@@ -25,7 +25,6 @@ class LuNet(BaseModel):
         self.margin = margin
 
         self.layers = {}
-        pass
 
     def _create_train_input(self):
         """ input for training """
@@ -41,27 +40,37 @@ class LuNet(BaseModel):
         """ create graph for training """
         self.set_is_training(True)
         self._create_train_input()
-        self.embedding = self._creat_model(self.image)
+        self.embedding = self._create_model(self.image)
 
         self.train_op = self.get_train_op()
         self.loss_op = self.get_loss()
+        self.train_summary_op = self._get_summary('train')
 
         self.global_step = 0
         self.epoch_id = 0
 
     def _get_loss(self):
         with tf.name_scope('loss'):
-            loss = batch_hard_triplet_loss(self.embedding, self.label, self.margin)
+            loss, nonzero_ratio = batch_hard_triplet_loss(self.embedding, self.label, self.margin)
+            self.nonzero_loss_ratio = nonzero_ratio
             return loss
 
     def _get_optimizer(self):
         return tf.train.AdamOptimizer(self.lr)
 
+    def _get_summary(self, collection):
+        with tf.name_scope(collection):
+            tf.summary.scalar('non_zero_losses', self.nonzero_loss_ratio, collections=[collection])
+            tf.summary.histogram('embedding_norm', tf.norm(self.embedding, axis=-1), collections=[collection])
+            tf.summary.histogram('embedding_element', self.embedding, collections=[collection])
+
+            return tf.summary.merge_all(key=collection)
+
     def _create_model(self, inputs):
         with tf.variable_scope('LuNet', reuse=tf.AUTO_REUSE):
             self.layers['cur_input'] = inputs
 
-            arg_scope = tf.contrib.framework.arg_scope()
+            arg_scope = tf.contrib.framework.arg_scope
             with arg_scope([L.conv, L.linear, resblock.res_block_bottleneck, resblock.res_block],
                            layer_dict=self.layers, bn=True, init_w=INIT_W,
                            is_training=self.is_training, wd=WD):
@@ -69,68 +78,73 @@ class LuNet(BaseModel):
                 with tf.variable_scope('block_1'):
                     L.conv(filter_size=7, out_dim=128, nl=L.leaky_relu, padding='SAME', name='conv1')
                     resblock.res_block_bottleneck(128, 32, 128, name='resblock1')
-                    L.max_pool(filter_size=3, stride=2, padding='SAME', name='max_pool1')
+                    L.max_pool(layer_dict=self.layers, filter_size=3, stride=2, padding='SAME', name='max_pool1')
 
                 with tf.variable_scope('block_2'):
                     resblock.res_block_bottleneck(128, 32, 128, name='resblock1')
                     resblock.res_block_bottleneck(128, 32, 128, name='resblock2')
                     resblock.res_block_bottleneck(128, 64, 256, name='resblock3')
-                    L.max_pool(filter_size=3, stride=2, padding='SAME', name='max_pool1')
+                    L.max_pool(layer_dict=self.layers, filter_size=3, stride=2, padding='SAME', name='max_pool1')
 
                 with tf.variable_scope('block_3'):
                     resblock.res_block_bottleneck(256, 64, 256, name='resblock1')
                     resblock.res_block_bottleneck(256, 64, 256, name='resblock2')
-                    L.max_pool(filter_size=3, stride=2, padding='SAME', name='max_pool1')
+                    L.max_pool(layer_dict=self.layers, filter_size=3, stride=2, padding='SAME', name='max_pool1')
 
                 with tf.variable_scope('block_4'):
                     resblock.res_block_bottleneck(256, 64, 256, name='resblock1')
                     resblock.res_block_bottleneck(256, 64, 256, name='resblock2')
                     resblock.res_block_bottleneck(256, 128, 512, name='resblock3')
-                    L.max_pool(filter_size=3, stride=2, padding='SAME', name='max_pool1')
+                    L.max_pool(layer_dict=self.layers, filter_size=3, stride=2, padding='SAME', name='max_pool1')
 
                 with tf.variable_scope('block_5'):
                     resblock.res_block_bottleneck(512, 128, 512, name='resblock1')
                     resblock.res_block_bottleneck(512, 128, 512, name='resblock2')
-                    L.max_pool(filter_size=3, stride=2, padding='SAME', name='max_pool1')
+                    L.max_pool(layer_dict=self.layers, filter_size=3, stride=2, padding='SAME', name='max_pool1')
 
                 with tf.variable_scope('block_6'):
                     resblock.res_block(n1=512, n2=128, name='res_block1')
                     L.linear(out_dim=512, nl=L.leaky_relu, name='linear1')
-                    L.linear(out_dim=128, name='linear2')
+                    L.linear(out_dim=self.embedding_dim, name='linear2')
 
             return self.layers['cur_input']
 
-    def train_epoch(self, sess, train_data, lr, summary_writer=None):
+    def train_steps(self, sess, train_data, init_lr=1e-3, t0=15000, t1=25000, max_step=100, summary_writer=None):
         self.epoch_id += 1
         display_name_list = ['loss']
-        cur_epoch = train_data.epochs_completed
+        # cur_epoch = train_data.epochs_completed
 
         cur_summary = None
         step = 0
-        while train_data.epochs_completed <= cur_epoch:
+
+        loss_sum = 0 
+        while step < max_step and self.global_step <= t1:
+            if self.global_step <= t0:
+                lr = init_lr
+            else:
+                lr = init_lr * (0.001 ** ((self.global_step - t0) / (t1 - t0)))
             step += 1
             self.global_step += 1
 
-            loss_sum = 0 
             batch_data = train_data.next_batch_dict()
-            _, loss = sess.run(
-                [self.train_op, self.loss_op],
+            _, loss, cur_summary = sess.run(
+                [self.train_op, self.loss_op, self.train_summary_op],
                 feed_dict={self.lr:lr, self.image: batch_data['im'],
                            self.label: batch_data['label']})
-
             loss_sum += loss
+            summary_writer.add_summary(cur_summary, self.global_step)
 
-            if step % 100 == 0:
-                viz.display(
-                    global_step=self.global_step,
-                    step=step,
-                    scaler_sum_list=[loss_sum],
-                    name_list=display_name_list,
-                    collection='train',
-                    summary_val=cur_summary,
-                    summary_writer=summary_writer)
+            # if step % 100 == 0:
+            #     viz.display(
+            #         global_step=self.global_step,
+            #         step=step,
+            #         scaler_sum_list=[loss_sum],
+            #         name_list=display_name_list,
+            #         collection='train',
+            #         summary_val=cur_summary,
+            #         summary_writer=summary_writer)
 
-        print('==== epoch: {}, lr:{} ===='.format(cur_epoch, lr))
+        print('==== lr:{} ===='.format(lr))
         viz.display(
             global_step=self.global_step,
             step=step,

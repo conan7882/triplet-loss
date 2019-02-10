@@ -10,13 +10,13 @@ import src.utils.dataflow as dfutil
 
 class DataflowBase(object):
     def __init__(self,
-                 n_class,
+                 n_class=None,
                  data_dir='',
                  batch_dict_name=None,
                  shuffle=True,
                  pf=dfutil.identity):
 
-        assert os.path.isdir(data_dir)
+        assert os.path.isdir(data_dir), 'Invalid path {}'.format(data_dir)
         self._data_dir = data_dir
         self._n_class = n_class
 
