@@ -3,7 +3,7 @@
 - TensorFlow implementation of person re-identification using triplet loss described in [
 In Defense of the Triplet Loss for Person Re-Identification
 ](https://arxiv.org/abs/1703.07737).
-- In this repository, the metric learning using triplet loss is tested on MNIST and [Market-1501 Dataset](http://www.liangzheng.org/Project/project_reid.html). For both dataset, batch hard mining is used during training.
+- In this repository, the metric learning using triplet loss is tested on MNIST and [Market-1501 Dataset](http://www.liangzheng.org/Project/project_reid.html). For both dataset, batch hard mining is used during training, which is implemented in [src/triplet/hard_mining.py](src/triplet/hard_mining.py).
 - Below are some results on [Market-1501 Dataset](http://www.liangzheng.org/Project/project_reid.html). From left to right: query image and top 10 retrieved images (green boarder - true positive; red border - false positive).
 ![result1](docs/query_2.png)
 ![result2](docs/query_1.png)
