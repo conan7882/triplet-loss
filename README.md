@@ -80,7 +80,9 @@ Go to `experiment`, run
 Go to `experiment`, run
 
  ```
- python viz_ranking --dataset market --embed EMBEDDING_DIM --folder FOLDER_NAME --load_id MODEL_ID --top_k TOP_K --n_query NUM_QUERY
+ python viz_ranking --dataset market --embed EMBEDDING_DIM \
+   --top_k TOP_K --n_query NUM_QUERY \
+   --folder FOLDER_NAME --load_id MODEL_ID 
  ```
  - `--load_id` is for the index (training step when saved) of trained model to be loaded, `--n_query` is for the number of query images used for visualization and `--top_k` is for how many closest images in gallery set are selected as retrieved images for each query image.
  - `NUM_QUERY` query images will be randomly selected from testing set and rest of images are regarded as gallery set. Embedding of entire testing set (19732 images) will be computed before ranking.
