@@ -16,7 +16,7 @@ In Defense of the Triplet Loss for Person Re-Identification
 ## Metric Learning on MNIST
 - The aim of this experiment is to check if the triplet loss using batch hard mining correctly implemented.
 - The dimension of embedding is set to be 2 for visualization.
-- As MNIST dataset is pretty simple, the network used to learn the embedding consists of 2 convolutional layers followed by 2 fully connect layers, which is defined **here**.
+- As MNIST dataset is pretty simple, the network used to learn the embedding consists of 2 convolutional layers followed by 2 fully connect layers.
 - For each batch, 12 samples of each class (0-9) are randomly selected. For triplet loss, margin = 0.5 is used.
 - Below is the learned embedding of testing set after training for 50 epochs with learning rate 1e-4. We can see different classes are well grouped.
 
