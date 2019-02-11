@@ -5,14 +5,17 @@
 
 import loader
 import config
+import os
+import imageio
 import sys
 import numpy as np
 import scipy.io
-import ntpath
-sys.path.append('../')
-import src.inference.distance as distance
-import src.inference.retrieve as retrieve
 
+sys.path.append('../')
+# import src.inference.distance as distance
+import src.inference.retrieve as retrieve
+import src.utils.viz as viz
+# import src.utils.dataflow as dfutil
 
 def test_dataflow():
     import matplotlib.pyplot as plt
@@ -43,24 +46,68 @@ def test_distance():
     print(ranking)
 
 def test_ranking():
-    test_dict = np.load('/Users/gq/workspace/GitHub/MARS-evaluation/data/train_embed.npy', encoding='latin1').item()
+    from src.dataflow.market import distractor_IDs
+    test_dict = np.load('E:/GITHUB/workspace/triplet/market_test.npy', encoding='latin1').item()
     embedding = test_dict['embedding']
-    scipy.io.savemat('/Users/gq/workspace/GitHub/MARS-evaluation/data/train_embed.mat',
-        {'test_feat': embedding})
-    # label_q = query_dict['label_q']
-    # filename_q = query_dict['filename_q']
+    file_path = test_dict['filename']
 
-    # gallery_dict = np.load('../lib/gallery.npy', encoding='latin1').item()
-    # embedding_g = gallery_dict['embedding_g']
-    # label_g = gallery_dict['label_g']
-    # filename_g = gallery_dict['filename_g']
+    distractor_idx = distractor_IDs(file_path)
+    embedding = np.delete(embedding, distractor_idx, axis=0)
+    file_path = np.delete(file_path, distractor_idx, axis=0)
 
-    print(embedding.shape)
-    # print(label_g[0])
-    # print(filename_g[0])
+    data_dir = os.path.join(config.market_dir, 'bounding_box_test')
+    save_path = config.market_save_path
 
-    # dist = distance.pair_distance(embedding_q, embedding_g)
-    # ranking = retrieve.ranking(dist, filename_g, top_k=5)
+    query_file_name, ranking_file_mat = retrieve.viz_ranking_single_testset(
+        embedding, file_path, n_query=20, top_k=5,
+        data_dir=data_dir, save_path=save_path, is_viz=False)
+
+    # n_test = len(embedding)
+    # n_query = 20
+    # top_k = 5
+    
+    # pert_idx = np.random.permutation(n_test)
+    # query_id = pert_idx[:n_query]
+    # gallery_id = pert_idx[n_query:]
+
+    # query_embedding = embedding[query_id]
+    # query_file = file_name[query_id]
+
+    # gallery_embedding = embedding[gallery_id]
+    # gallery_file = file_name[gallery_id]
+
+    # data_dir = os.path.join(config.market_dir, 'bounding_box_test')
+    # save_path = config.market_save_path
+
+    # query_file_name, ranking_file_mat = retrieve.ranking(
+    #     query_embedding, gallery_embedding, query_file, gallery_file, top_k=5,
+    #     data_dir=data_dir, save_path=save_path, is_viz=True)
+    print(query_file_name, ranking_file_mat)
+
+
+    # dist = distance.pair_distance(query_embedding, gallery_embedding)
+    # ranking = retrieve.ranking(dist, gallery_file, top_k=top_k)
+
+    # save_path = config.market_save_path
+
+    # for idx, q_im in enumerate(query_file):
+    #     im_list = []
+    #     head, q_file_name = ntpath.split(q_im)
+    #     im = imageio.imread(
+    #         os.path.join(config.market_dir, 'bounding_box_test', q_file_name),
+    #         as_gray=False, pilmode="RGB")
+    #     im_list.append(im)
+
+    #     for g_im in ranking[idx]:
+    #         head, g_file_name = ntpath.split(g_im)
+    #         im = imageio.imread(
+    #             os.path.join(config.market_dir, 'bounding_box_test', g_file_name),
+    #             as_gray=False, pilmode="RGB")
+    #         im_list.append(im)
+
+    #     viz.viz_batch_im(
+    #         im_list, grid_size=[1, 1 + top_k], save_path=os.path.join(config.market_save_path, 'query_{}.png'.format(idx)),
+    #         gap=2, gap_color=0, shuffle=False)
 
     # np.save('imlist.npy', ranking)
 
@@ -100,4 +147,4 @@ def test():
 
 
 if __name__ == '__main__':
-    test_dataflow()
+    test_ranking()

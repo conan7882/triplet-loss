@@ -12,6 +12,19 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 
+def add_frame_im(im, frame_width, frame_color):
+    im = np.array(im)
+    if len(im.shape) == 3:
+        frame_im = np.zeros(
+            (im.shape[0] + 2*frame_width, im.shape[1] + 2*frame_width, im.shape[2])) + frame_color
+        frame_im[frame_width: frame_width + im.shape[0], frame_width: frame_width + im.shape[1], :] = im
+    else:
+        frame_im = np.zeros(
+            (im.shape[0] + 2*frame_width, im.shape[1] + 2*frame_width)) + frame_color
+        frame_im[frame_width: frame_width + im.shape[0], frame_width: frame_width + im.shape[1]] = im
+
+    return frame_im
+
 def viz_batch_im(batch_im, grid_size, save_path,
                  gap=0, gap_color=0, shuffle=False):
     """ save batch of image as a single image 
@@ -39,6 +52,7 @@ def viz_batch_im(batch_im, grid_size, save_path,
     merge_im = np.zeros((h * grid_size[0] + (grid_size[0] + 1) * gap,
                          w * grid_size[1] + (grid_size[1] + 1) * gap,
                          n_channel)) + gap_color
+    merge_im = merge_im.astype(np.uint8)
 
     n_viz_im = min(batch_im.shape[0], grid_size[0] * grid_size[1])
     if shuffle == True:

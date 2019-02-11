@@ -3,23 +3,76 @@
 # File: retrieve.py
 # Author: Qian Ge <geqian1001@gmail.com>
 
+import os
+import imageio
+import ntpath
 import numpy as np
+import src.utils.viz as viz
+import src.inference.inference_tools as infertool
 
 
-def ranking(distance_mat, gallary_list, top_k=5):
-    # distance_mat [query_len, gallary_len]
-    distance_mat = np.array(distance_mat)
-    gallary_list = np.array(gallary_list)
-    assert len(gallary_list) == distance_mat.shape[1]
-    # get top k closest distance for each query input without sorting
-    top_k_ind_mat = np.argpartition(distance_mat, top_k, axis=1)[:, :top_k]
-    query_id_list = [[i for _ in range(top_k)] for i in range(distance_mat.shape[0])]
-    query_idx = np.reshape(np.array(query_id_list), (-1))
-    top_k_idx = np.reshape(top_k_ind_mat, (-1))
-    top_k_distance = np.reshape(distance_mat[(query_idx, top_k_idx)], (distance_mat.shape[0], top_k))
-    # sort distance for each query input and get the corresponding gallary id
-    sort_top_k = np.reshape(np.argsort(top_k_distance, axis=1), (-1))
-    sort_top_k = top_k_ind_mat[(query_idx, sort_top_k)]
-    top_k_gallary = np.reshape(gallary_list[sort_top_k], (distance_mat.shape[0], top_k))
+def viz_ranking_single_testset(embedding, file_path, n_query=20, top_k=5,
+                               data_dir=None, save_path=None, is_viz=False):
+    n_test = len(embedding)
     
-    return top_k_gallary
+    pert_idx = np.random.permutation(n_test)
+    query_id = pert_idx[:n_query]
+    gallery_id = pert_idx[n_query:]
+
+    query_embedding = embedding[query_id]
+    query_file = file_path[query_id]
+
+    gallery_embedding = embedding[gallery_id]
+    gallery_file = file_path[gallery_id]
+
+    query_file_name, ranking_file_mat = viz_ranking(
+        query_embedding, gallery_embedding, query_file, gallery_file, top_k=top_k,
+        data_dir=data_dir, save_path=save_path, is_viz=True)
+
+    return query_file_name, ranking_file_mat
+
+def viz_ranking(query_embedding, gallery_embedding, query_file_name, gallery_file_name, top_k=5,
+                data_dir=None, save_path=None, is_viz=False):
+
+    pair_dist = infertool.pair_distance(query_embedding, gallery_embedding)
+    ranking_file_mat = infertool.ranking_distance(pair_dist, gallery_file_name, top_k=top_k)
+
+    frame_width = 2
+    frame_color_correct = [0, 255, 0]
+    frame_color_wrong = [255, 0, 0]
+
+    if is_viz:
+        assert data_dir and save_path
+        for idx, q_im in enumerate(query_file_name):
+            im_list = []
+            head, q_file_name = ntpath.split(q_im)
+            q_class_id = q_file_name.split('_')[0]
+            im = imageio.imread(
+                os.path.join(data_dir, q_file_name),
+                as_gray=False,
+                pilmode="RGB")
+            im = viz.add_frame_im(im, frame_width, frame_color=0)
+            im_list.append(im)
+            
+            for g_im in ranking_file_mat[idx]:
+                head, g_file_name = ntpath.split(g_im)
+                g_class_id = g_file_name.split('_')[0]
+                im = imageio.imread(
+                    os.path.join(data_dir, g_file_name),
+                    as_gray=False,
+                    pilmode="RGB")
+                if g_class_id == q_class_id:
+                    frame_color = frame_color_correct
+                else:
+                    frame_color = frame_color_wrong
+
+                im = viz.add_frame_im(im, frame_width, frame_color=frame_color)
+                im_list.append(im)
+
+            viz.viz_batch_im(
+                im_list,
+                grid_size=[1, 1 + top_k],
+                save_path=os.path.join(save_path, 'query_{}.png'.format(idx)),
+                gap=0, gap_color=0, shuffle=False)
+
+    return query_file_name, ranking_file_mat

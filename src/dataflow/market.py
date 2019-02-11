@@ -12,6 +12,31 @@ import src.utils.dataflow as dfutil
 from src.dataflow.base import DataflowBaseTriplet, DataflowBaseChild, DataflowBase
 
 
+def distractor_IDs(file_path_list):
+    IDs = []
+    for idx, file_path in enumerate(file_path_list):
+        head, tail = ntpath.split(file_path)
+        label = tail.split('_')[0]
+        if label == '0000' or label == '-1':
+            IDs.append(idx)
+
+    return IDs
+
+class Market(DataflowBase):
+    def _load_data(self):
+        im_list = np.array(sorted(dfutil.get_file_list(self._data_dir, 'jpg')))
+        label_list = [0 for _ in range(len(im_list))]
+
+        return im_list, label_list
+
+    def _read_batch_im(self, batch_file_list):
+        
+        im_list = []
+        for file_name in batch_file_list:
+            im = dfutil.load_image(file_name, read_channel=3, pf=self._pf)
+            im_list.append(im)
+        return im_list
+
 class MarketTriplet(DataflowBaseTriplet):
     def __init__(self,
                  n_class=None,

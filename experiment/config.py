@@ -19,5 +19,8 @@ elif platform.node() == 'arostitan':
 
     market_dir = '/home/qge2/workspace/data/dataset/market/Market-1501-v15.09.15/'
     market_save_path = '/home/qge2/workspace/data/out/triplet/market/'
+elif platform.node() == 'aros04':
+    market_dir = 'E:/Dataset/market/Market-1501-v15.09.15/'
+    market_save_path = 'E:/GITHUB/workspace/triplet/'
 else:
     raise ValueError('No data dir setup on this platform!')
