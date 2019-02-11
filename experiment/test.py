@@ -81,10 +81,12 @@ def test_map():
     gallery_pids = pids[gallery_id]
     gallery_camera_ids = camera_ids[gallery_id]
 
-    q_g_dist = infertool.pair_distance(query_embedding, gallery_embedding)
-    q_q_dist = infertool.pair_distance(query_embedding, query_embedding)
-    g_g_dist = infertool.pair_distance(gallery_embedding, gallery_embedding)
-    pair_dist = re_ranking(q_g_dist, q_q_dist, g_g_dist, k1=20, k2=6, lambda_value=0.3)
+    # q_g_dist = infertool.pair_distance(query_embedding, gallery_embedding)
+    # q_q_dist = infertool.pair_distance(query_embedding, query_embedding)
+    # g_g_dist = infertool.pair_distance(gallery_embedding, gallery_embedding)
+    # pair_dist = re_ranking(q_g_dist, q_q_dist, g_g_dist, k1=20, k2=6, lambda_value=0.3)
+
+    pair_dist = infertool.pair_distance(query_embedding, gallery_embedding)
 
     aps = mean_ap(
         distmat=pair_dist,
@@ -149,4 +151,4 @@ def test():
 
 
 if __name__ == '__main__':
-    test_map()
+    test_ranking()

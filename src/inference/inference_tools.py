@@ -18,12 +18,24 @@ def pair_distance(embedding_1, embedding_2):
     embedding_1 = np.array(embedding_1)
     embedding_2 = np.array(embedding_2)
     assert embedding_1.shape[1] == embedding_2.shape[1]
-    # make use of broadcasting
-    embedding_1 = np.expand_dims(embedding_1, axis=1) # [len_1, 1. embedding_dim]
-    embedding_2 = np.expand_dims(embedding_2, axis=0) # [1, len_2, embedding_dim]
+    
 
-    diff_embedding = embedding_1 - embedding_2 # [len_1, len_2, embedding_dim]
-    distance = np.linalg.norm(diff_embedding, axis=-1)
+    dot_12 = np.matmul(embedding_1, np.transpose(embedding_2)) # [len_1, len_2]
+    dot_11 = np.matmul(embedding_1, np.transpose(embedding_1)) # [len_1, len_1]
+    dot_22 = np.matmul(embedding_2, np.transpose(embedding_2)) # [len_2, len_2]
+
+    square_1 = np.expand_dims(dot_11.diagonal(), axis=1)
+    square_2 = np.expand_dims(dot_22.diagonal(), axis=0)
+
+    distance = np.sqrt(np.maximum((square_1 + square_2 - 2 * dot_12), 0.))
+
+    # # Use too many memeries
+    # # make use of broadcasting
+    # embedding_1 = np.expand_dims(embedding_1, axis=1) # [len_1, 1. embedding_dim]
+    # embedding_2 = np.expand_dims(embedding_2, axis=0) # [1, len_2, embedding_dim]
+    # diff_embedding = embedding_1 - embedding_2 # [len_1, len_2, embedding_dim]
+    # distance2 = np.linalg.norm(diff_embedding, axis=-1)
+
     return distance
 
 def ranking_distance(distance_mat, gallary_list, top_k=5):
