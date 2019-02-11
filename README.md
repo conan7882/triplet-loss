@@ -24,7 +24,7 @@ In Defense of the Triplet Loss for Person Re-Identification
 
 ### Train embedding of MNIST by yourself
 #### Setup path
-- All the paths are setup in [`experiment\config.py`](experiment\config.py).
+- All the paths are setup in [`experiment/config.py`](experiment/config.py).
 - `mnist_dir` - directory of MNIST dataset.
 - `mnist_save_path` - directory of saving results.
 
@@ -62,7 +62,7 @@ Row 2: Left: statistics of embedding entries; Right: statistics of 2-norm of emb
 ### Train and inference embedding for person re-identification on [Market-1501 Dataset](http://www.liangzheng.org/Project/project_reid.html)
 #### Preparation
 - Download the dataset from [here](http://www.liangzheng.org/Project/project_reid.html).
-- Setup in [`experiment\config.py`](experiment\config.py):
+- Setup in [`experiment/config.py`](experiment/config.py):
 - `market_dir` - directory of dataset.
 - `market_save_path` - directory of saving results.
 
