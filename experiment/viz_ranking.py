@@ -26,6 +26,7 @@ def get_args():
     return parser.parse_args()
 
 def inference_market():
+    
     FLAGS = get_args()
     save_path = os.path.join(config.market_save_path, FLAGS.folder)
 
@@ -52,7 +53,8 @@ def inference_market():
 def ranking_markert():
     FLAGS = get_args()
     if FLAGS.load_embed:
-        test_dict = np.load('E:/GITHUB/workspace/triplet/market_test.npy', encoding='latin1').item()
+        # test_dict = np.load('E:/GITHUB/workspace/triplet/market_test.npy', encoding='latin1').item()
+        test_dict = np.load('../lib/market_test.npy', encoding='latin1').item()
         embedding = test_dict['embedding']
         file_path = test_dict['filename']
     else:
@@ -67,7 +69,7 @@ def ranking_markert():
 
     query_file_name, ranking_file_mat = retrieve.viz_ranking_single_testset(
         embedding, file_path, n_query=50, top_k=5,
-        data_dir=data_dir, save_path=save_path, is_viz=False)
+        data_dir=data_dir, save_path=save_path, is_viz=True)
 
 
 if __name__ == '__main__':

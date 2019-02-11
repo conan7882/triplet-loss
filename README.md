@@ -8,6 +8,7 @@ In Defense of the Triplet Loss for Person Re-Identification
 ## Requirments
 - Python 3.0
 - TensorFlow 1.12.0+ 
+- sklearn
 
 ## Metric Learning on MNIST
 - Test on MNIST dataset to check if the triplet loss using batch hard mining correctly implemented.

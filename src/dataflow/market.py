@@ -12,6 +12,20 @@ import src.utils.dataflow as dfutil
 from src.dataflow.base import DataflowBaseTriplet, DataflowBaseChild, DataflowBase
 
 
+def parse_filename(file_path_list):
+    pid_list = []
+    camera_id_list = []
+    for idx, file_path in enumerate(file_path_list):
+        head, tail = ntpath.split(file_path)
+        pid = tail.split('_')[0]
+        camera_id = tail.split('_')[1][:2]
+
+        pid_list.append(pid)
+        camera_id_list.append(camera_id)
+    return np.array(pid_list), np.array(camera_id_list)
+
+
+
 def distractor_IDs(file_path_list):
     IDs = []
     for idx, file_path in enumerate(file_path_list):

@@ -14,6 +14,7 @@ import scipy.io
 sys.path.append('../')
 # import src.inference.distance as distance
 import src.inference.retrieve as retrieve
+
 import src.utils.viz as viz
 # import src.utils.dataflow as dfutil
 
@@ -45,9 +46,59 @@ def test_distance():
     ranking = retrieve.ranking(dist, gallary_list, top_k=2)
     print(ranking)
 
+def test_map():
+    from src.dataflow.market import distractor_IDs, parse_filename
+    from src.eval.mAP import mean_ap
+    import src.inference.inference_tools as infertool
+    from src.inference.re_ranking import re_ranking
+
+    # test_dict = np.load('../lib/market_test.npy', encoding='latin1').item()
+    test_dict = np.load('E:/GITHUB/workspace/triplet/market_test.npy', encoding='latin1').item()
+    embedding = test_dict['embedding']
+    file_path = test_dict['filename']
+
+    pids, camera_ids = parse_filename(file_path)
+
+    distractor_idx = distractor_IDs(file_path)
+    embedding = np.delete(embedding, distractor_idx, axis=0)
+    file_path = np.delete(file_path, distractor_idx, axis=0)
+    pids = np.delete(pids, distractor_idx, axis=0)
+    camera_ids = np.delete(camera_ids, distractor_idx, axis=0)
+
+    n_test = len(embedding)
+    n_query = 10
+    pert_idx = np.random.permutation(n_test)
+    query_id = pert_idx[:n_query]
+    gallery_id = pert_idx[n_query:]
+
+    query_embedding = embedding[query_id]
+    query_file = file_path[query_id]
+    query_pids = pids[query_id]
+    query_camera_ids = camera_ids[query_id]
+
+    gallery_embedding = embedding[gallery_id]
+    gallery_file = file_path[gallery_id]
+    gallery_pids = pids[gallery_id]
+    gallery_camera_ids = camera_ids[gallery_id]
+
+    q_g_dist = infertool.pair_distance(query_embedding, gallery_embedding)
+    q_q_dist = infertool.pair_distance(query_embedding, query_embedding)
+    g_g_dist = infertool.pair_distance(gallery_embedding, gallery_embedding)
+    pair_dist = re_ranking(q_g_dist, q_q_dist, g_g_dist, k1=20, k2=6, lambda_value=0.3)
+
+    aps = mean_ap(
+        distmat=pair_dist,
+        query_ids=query_pids,
+        gallery_ids=gallery_pids,
+        query_cams=query_camera_ids,
+        gallery_cams=gallery_camera_ids,
+        average=True)
+    print(aps)
+
+
 def test_ranking():
     from src.dataflow.market import distractor_IDs
-    test_dict = np.load('E:/GITHUB/workspace/triplet/market_test.npy', encoding='latin1').item()
+    test_dict = np.load('../lib/market_test.npy', encoding='latin1').item()
     embedding = test_dict['embedding']
     file_path = test_dict['filename']
 
@@ -60,56 +111,7 @@ def test_ranking():
 
     query_file_name, ranking_file_mat = retrieve.viz_ranking_single_testset(
         embedding, file_path, n_query=20, top_k=5,
-        data_dir=data_dir, save_path=save_path, is_viz=False)
-
-    # n_test = len(embedding)
-    # n_query = 20
-    # top_k = 5
-    
-    # pert_idx = np.random.permutation(n_test)
-    # query_id = pert_idx[:n_query]
-    # gallery_id = pert_idx[n_query:]
-
-    # query_embedding = embedding[query_id]
-    # query_file = file_name[query_id]
-
-    # gallery_embedding = embedding[gallery_id]
-    # gallery_file = file_name[gallery_id]
-
-    # data_dir = os.path.join(config.market_dir, 'bounding_box_test')
-    # save_path = config.market_save_path
-
-    # query_file_name, ranking_file_mat = retrieve.ranking(
-    #     query_embedding, gallery_embedding, query_file, gallery_file, top_k=5,
-    #     data_dir=data_dir, save_path=save_path, is_viz=True)
-    print(query_file_name, ranking_file_mat)
-
-
-    # dist = distance.pair_distance(query_embedding, gallery_embedding)
-    # ranking = retrieve.ranking(dist, gallery_file, top_k=top_k)
-
-    # save_path = config.market_save_path
-
-    # for idx, q_im in enumerate(query_file):
-    #     im_list = []
-    #     head, q_file_name = ntpath.split(q_im)
-    #     im = imageio.imread(
-    #         os.path.join(config.market_dir, 'bounding_box_test', q_file_name),
-    #         as_gray=False, pilmode="RGB")
-    #     im_list.append(im)
-
-    #     for g_im in ranking[idx]:
-    #         head, g_file_name = ntpath.split(g_im)
-    #         im = imageio.imread(
-    #             os.path.join(config.market_dir, 'bounding_box_test', g_file_name),
-    #             as_gray=False, pilmode="RGB")
-    #         im_list.append(im)
-
-    #     viz.viz_batch_im(
-    #         im_list, grid_size=[1, 1 + top_k], save_path=os.path.join(config.market_save_path, 'query_{}.png'.format(idx)),
-    #         gap=2, gap_color=0, shuffle=False)
-
-    # np.save('imlist.npy', ranking)
+        data_dir=data_dir, save_path=save_path, is_viz=True)
 
 def test():
     im_list = np.load('../lib/imlist.npy')
@@ -147,4 +149,4 @@ def test():
 
 
 if __name__ == '__main__':
-    test_ranking()
+    test_map()

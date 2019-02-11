@@ -27,13 +27,12 @@ def viz_ranking_single_testset(embedding, file_path, n_query=20, top_k=5,
 
     query_file_name, ranking_file_mat = viz_ranking(
         query_embedding, gallery_embedding, query_file, gallery_file, top_k=top_k,
-        data_dir=data_dir, save_path=save_path, is_viz=True)
+        data_dir=data_dir, save_path=save_path, is_viz=is_viz)
 
     return query_file_name, ranking_file_mat
 
 def viz_ranking(query_embedding, gallery_embedding, query_file_name, gallery_file_name, top_k=5,
                 data_dir=None, save_path=None, is_viz=False):
-
     pair_dist = infertool.pair_distance(query_embedding, gallery_embedding)
     ranking_file_mat = infertool.ranking_distance(pair_dist, gallery_file_name, top_k=top_k)
 
