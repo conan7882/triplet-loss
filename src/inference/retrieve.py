@@ -9,9 +9,10 @@ import ntpath
 import numpy as np
 import src.utils.viz as viz
 import src.inference.inference_tools as infertool
+from src.inference.re_ranking import re_ranking
 
 
-def viz_ranking_single_testset(embedding, file_path, n_query=20, top_k=5,
+def viz_ranking_single_testset(embedding, file_path, n_query=20, top_k=10, is_re_ranking=True,
                                data_dir=None, save_path=None, is_viz=False):
     n_test = len(embedding)
     
@@ -26,14 +27,22 @@ def viz_ranking_single_testset(embedding, file_path, n_query=20, top_k=5,
     gallery_file = file_path[gallery_id]
 
     query_file_name, ranking_file_mat = viz_ranking(
-        query_embedding, gallery_embedding, query_file, gallery_file, top_k=top_k,
-        data_dir=data_dir, save_path=save_path, is_viz=is_viz)
+        query_embedding, gallery_embedding, query_file, gallery_file, top_k=top_k, 
+        is_re_ranking=is_re_ranking, data_dir=data_dir, save_path=save_path, is_viz=is_viz)
 
     return query_file_name, ranking_file_mat
 
-def viz_ranking(query_embedding, gallery_embedding, query_file_name, gallery_file_name, top_k=5,
-                data_dir=None, save_path=None, is_viz=False):
-    pair_dist = infertool.pair_distance(query_embedding, gallery_embedding)
+def viz_ranking(query_embedding, gallery_embedding, query_file_name, gallery_file_name, top_k=10,
+                is_re_ranking=True, data_dir=None, save_path=None, is_viz=False):
+
+    if is_re_ranking:
+        q_g_dist = infertool.pair_distance(query_embedding, gallery_embedding)
+        q_q_dist = infertool.pair_distance(query_embedding, query_embedding)
+        g_g_dist = infertool.pair_distance(gallery_embedding, gallery_embedding)
+        pair_dist = re_ranking(q_g_dist, q_q_dist, g_g_dist, k1=20, k2=6, lambda_value=0.3)
+    else:
+        pair_dist = infertool.pair_distance(query_embedding, gallery_embedding)
+
     ranking_file_mat = infertool.ranking_distance(pair_dist, gallery_file_name, top_k=top_k)
 
     frame_width = 2

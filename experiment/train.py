@@ -55,9 +55,9 @@ def train_mars():
     FLAGS = get_args()
     save_path = os.path.join(config.mars_save_path, FLAGS.folder)
 
-    embedding_dim = 128
+    embedding_dim = FLAGS.embed # 128
     im_size = [128, 64]
-    margin = 0.5
+    margin = FLAGS.margin # 0.5
 
     train_data = loader.loadMARSTrain(config.mars_dir, sample_per_class=4, rescale_im=im_size)
 
@@ -85,9 +85,9 @@ def train_market():
     FLAGS = get_args()
     save_path = os.path.join(config.market_save_path, FLAGS.folder)
 
-    embedding_dim = 128
+    embedding_dim = FLAGS.embed # 128
     im_size = [128, 64]
-    margin = 0.5
+    margin = FLAGS.margin # 0.5
 
     train_data = loader.loadMarketTrain(config.market_dir, sample_per_class=4, rescale_im=im_size)
 
@@ -115,8 +115,8 @@ if __name__ == '__main__':
     FLAGS = get_args()
     if FLAGS.dataset == 'mnist':
         train_mnist()
-    elif FLAGS.dataset == 'mars':
-        train_mars()
+    # elif FLAGS.dataset == 'mars':
+    #     train_mars()
     elif FLAGS.dataset == 'market':
         train_market()
 

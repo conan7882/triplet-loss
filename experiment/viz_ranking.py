@@ -13,7 +13,8 @@ import loader
 import config
 from src.nets.lunet import LuNet
 import src.inference.retrieve as retrieve
-from src.dataflow.market import distractor_IDs
+from src.dataflow.market import distractor_IDs, parse_filename
+from src.eval.mAP import mean_ap
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -21,7 +22,9 @@ def get_args():
     parser.add_argument('--folder', type=str, default='test')
     parser.add_argument('--load_embed', action='store_true')
 
-    parser.add_argument('--embed', type=int, default=2)
+    parser.add_argument('--n_query', type=int, default=10)
+    parser.add_argument('--top_k', type=int, default=10)
+    parser.add_argument('--embed', type=int, default=128)
     parser.add_argument('--load_id', type=int, default=249)
     return parser.parse_args()
 
@@ -30,7 +33,7 @@ def inference_market():
     FLAGS = get_args()
     save_path = os.path.join(config.market_save_path, FLAGS.folder)
 
-    embedding_dim = 128
+    embedding_dim = FLAGS.embed
     im_size = [128, 64]
 
     train_data, test_data = loader.loadMarketInference(config.market_dir, rescale_im=im_size, batch_size=256)
@@ -60,17 +63,17 @@ def ranking_markert():
     else:
         embedding, file_path = inference_market()
 
+    # pids, camera_ids = parse_filename(file_path)
     distractor_idx = distractor_IDs(file_path)
     embedding = np.delete(embedding, distractor_idx, axis=0)
     file_path = np.delete(file_path, distractor_idx, axis=0)
 
     data_dir = os.path.join(config.market_dir, 'bounding_box_test')
-    save_path = config.market_save_path
+    save_path = os.path.join(config.market_save_path, FLAGS.folder)
 
     query_file_name, ranking_file_mat = retrieve.viz_ranking_single_testset(
-        embedding, file_path, n_query=50, top_k=5,
+        embedding, file_path, n_query=FLAGS.n_query, top_k=FLAGS.top_k,
         data_dir=data_dir, save_path=save_path, is_viz=True)
-
 
 if __name__ == '__main__':
     ranking_markert()

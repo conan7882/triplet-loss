@@ -112,42 +112,8 @@ def test_ranking():
     save_path = config.market_save_path
 
     query_file_name, ranking_file_mat = retrieve.viz_ranking_single_testset(
-        embedding, file_path, n_query=20, top_k=5,
+        embedding, file_path, n_query=10, top_k=10,
         data_dir=data_dir, save_path=save_path, is_viz=True)
-
-def test():
-    im_list = np.load('../lib/imlist.npy')
-    test_dict = np.load('/Users/gq/workspace/GitHub/MARS-evaluation/data/test_embed.npy', encoding='latin1').item()
-    embedding = test_dict['embedding']
-
-    id_list = []
-    id_dict = {}
-    cnt = 0
-    tracklet_id = -1
-    embed_sum = 0
-    avg_embed = []
-
-    t = 0
-    for idx, im_dir in enumerate(im_list):
-        head, tail = ntpath.split(im_dir)
-        id_name = ntpath.basename(head)
-        if id_name in id_dict:
-            embed_sum += embedding[idx]
-            cnt += 1
-        else:
-            if cnt > 0:
-                avg_embed.append(1.0 * embed_sum / cnt)
-            cnt = 0
-            embed_sum = 0
-            tracklet_id += 1
-            id_dict[id_name] = tracklet_id
-
-        t += 1
-        if t > 2000:
-            break
-
-    print(tracklet_id)
-
 
 
 if __name__ == '__main__':
