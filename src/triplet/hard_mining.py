@@ -73,7 +73,7 @@ def batch_hard_triplet_loss(embedding, label, margin):
             margin: value of margin for triplet loss
             
         Returns:
-            Batch hard mining of triplet loss averaged over batch and ratio of non-zero losses in batch hardest triplets
+            Averaged batch hardest triplet loss and the ratio of non-zero triplet losses
     """
     
     with tf.name_scope('hard_mining'):
