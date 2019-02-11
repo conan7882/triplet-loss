@@ -49,6 +49,7 @@ Row 1: Left: non-zero loss ratio of hardest triplet at each training step; Right
 Row 2: Left: statistics of embedding entries; Right: statistics of 2-norm of embeddings.
 <img src="docs/lc1.png" data-canonical-src="docs/lc1.png" width='800'/>
 <img src="docs/lc2.png" data-canonical-src="docs/lc2.png" width='800'/>
+
 - [Re-ranking](https://arxiv.org/abs/1701.08398) is used when retrieving images from gallery set given a set of query images.  
 - Below are retrieve results given query images. From left to right: query image and top 10 retrieved images (green boarder - true positive; red border - false positive).
 ![result1](docs/query_0.png)
