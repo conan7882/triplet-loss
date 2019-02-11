@@ -75,13 +75,3 @@ def batch_hard_triplet_loss(embedding, label, margin):
         nonzero_ratio = nonzero_loss / tf.cast(tf.shape(embedding)[0], tf.float32)
 
         return tf.reduce_mean(triplet_loss), nonzero_ratio
-
-
-
-
-
-
-
-
-
-

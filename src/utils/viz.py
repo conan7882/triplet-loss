@@ -5,7 +5,7 @@
 
 import imageio
 import numpy as np
-# import tensorflow as tf
+import tensorflow as tf
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -93,7 +93,6 @@ def display(global_step,
         summary_writer (tf.FileWriter): write for summary. No summary will be
             saved if None.
     """
-    import tensorflow as tf
     
     print('[step: {}]'.format(global_step), end='')
     for val, name in zip(scaler_sum_list, name_list):

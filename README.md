@@ -32,7 +32,7 @@ In Defense of the Triplet Loss for Person Re-Identification
 Go to `experiment`, run
 
  ```
- python train.py --train --dateset mnist --lr 1e-4 --embed EMBEDDING_DIM --margin MARGIN_VAL
+ python train.py --dateset mnist --lr 1e-4 --embed EMBEDDING_DIM --margin MARGIN_VAL
  ```
  
 - `--embed` is for dimension of embedding and `--margin` is for margin value of triplet loss
@@ -69,7 +69,7 @@ Row 2: Left: statistics of embedding entries; Right: statistics of 2-norm of emb
 Go to `experiment`, run
 
  ```
- python train.py --train --dataset market --lr 5e-4 --embed EMBEDDING_DIM --margin MARGIN_VAL --folder FOLDER_NAME
+ python train.py --dataset market --lr 5e-4 --embed EMBEDDING_DIM --margin MARGIN_VAL --folder FOLDER_NAME
  ```
  - `--embed` is for dimension of embedding, `--margin` is for margin value of triplet loss and `--folder` is for subfolder under `market_save_path` used for separating results of different experiments.
  - Summary file for Tensorboard visualization will be saved in `market_save_path/FOLDER_NAME/`.

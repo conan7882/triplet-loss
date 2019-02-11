@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # File: mAP.py
-# Author: Qian Ge <geqian1001@gmail.com>
+
+# Copy from:
+# https://github.com/huanghoujing/person-reid-triplet-loss-baseline/blob/master/tri_loss/utils/metric.py#L107
 
 import sklearn
 from sklearn.metrics import average_precision_score

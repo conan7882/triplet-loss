@@ -55,3 +55,4 @@ def ranking_distance(distance_mat, gallary_list, top_k=5):
     top_k_gallary = np.reshape(gallary_list[sort_top_k], (distance_mat.shape[0], top_k))
     
     return top_k_gallary
+    

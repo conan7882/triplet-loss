@@ -1,5 +1,10 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# File: re_ranking.py
+
 # Copy from:
 # https://github.com/huanghoujing/person-reid-triplet-loss-baseline/blob/master/tri_loss/utils/re_ranking.py
+
 """
 Created on Mon Jun 26 14:46:56 2017
 
