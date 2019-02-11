@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # File: hard_mining.py
 # Author: Qian Ge <geqian1001@gmail.com>
+# reference code: https://github.com/omoindrot/tensorflow-triplet-loss
 
 import tensorflow as tf
 
@@ -12,9 +13,10 @@ def pair_wise_distance(embedding):
         
         Args:
             embedding: input embedding with shape [bsize, embedding_dim]
-
+            
+        Return:
+            Pairwise distance of input embedding with shape [bsize, bsize]
     """
-
     with tf.name_scope('pair_wise_distance'):
         dot_embed = tf.linalg.matmul(embedding, embedding, transpose_b=True) # [bsize, bsize]
         # a^2
@@ -24,12 +26,13 @@ def pair_wise_distance(embedding):
         squared_a = tf.expand_dims(squared_embed, axis=0) # [1, bsize]
         squared_b = tf.expand_dims(squared_embed, axis=1) # [bsize, 1]
         squared_distance = squared_a + squared_b - 2. * dot_embed # [bsize, bsize]
-
+        # make square distance no less than 0
         squared_distance = tf.math.maximum(squared_distance, 0.)
         squared_distance = tf.cast(squared_distance, tf.float32)
 
         distance = squared_distance
-
+        # avoid sqrt(0) to make numerical stable 
+        # when computing gradient
         mask = tf.to_float(tf.math.equal(distance, 0.0))
         distance = distance + mask * SMALL_VAL
         distance = tf.sqrt(distance)
@@ -38,8 +41,15 @@ def pair_wise_distance(embedding):
         return distance
 
 def _get_mask(label, mask_type):
-    # label [bsize, ]
-
+    """ Get mask for extracting postive or negative pairwise distance
+        
+        Args:
+            label: labels for each sample of current batch with shape [bsize, ]
+            mask_type: 'positive' or 'negative' mask to indicate postive or negative pairwise distance
+            
+        Return:
+            mask (float) to indicate postive or negative pairwise distance with shape [bsize, bsize]
+    """
     with tf.name_scope('get_mask'):
         if mask_type == 'positive':
             # make use of broadcasting
@@ -55,6 +65,17 @@ def _get_mask(label, mask_type):
         return tf.cast(mask, tf.float32)
 
 def batch_hard_triplet_loss(embedding, label, margin):
+    """ Batch hard mining for triplet loss
+        
+        Args:
+            embedding: input embedding with shape [bsize, embedding_dim]
+            label: labels for each sample of current batch with shape [bsize, ]
+            margin: value of margin for triplet loss
+            
+        Returns:
+            Batch hard mining of triplet loss averaged over batch and ratio of non-zero losses in batch hardest triplets
+    """
+    
     with tf.name_scope('hard_mining'):
         pair_wise_d = pair_wise_distance(embedding) # [bsize, bsize]
 
