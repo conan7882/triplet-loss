@@ -5,12 +5,12 @@
 
 import numpy as np
 import tensorflow as tf
+import progressbar
 import src.models.layers as L
 import src.models.resblock as resblock
 from src.models.base import BaseModel
 from src.triplet.hard_mining import batch_hard_triplet_loss
 import src.utils.viz as viz
-
 
 
 INIT_W = tf.keras.initializers.he_normal()
@@ -48,6 +48,22 @@ class LuNet(BaseModel):
 
         self.global_step = 0
         self.epoch_id = 0
+
+    def _create_inference_input(self):
+        """ input for inference """
+        self.image = tf.placeholder(
+            tf.float32, 
+            [None, self.im_h, self.im_w, self.n_channels],
+            name='image')
+        # self.label = tf.placeholder(tf.int64, [None], name='label')
+
+    def create_inference_model(self):
+        """ create graph for inference """
+        self.set_is_training(False)
+        self._create_inference_input()
+        self.embedding = self._create_model(self.image)
+
+        self.global_step = 0
 
     def _get_loss(self):
         with tf.name_scope('loss'):
@@ -153,6 +169,58 @@ class LuNet(BaseModel):
             collection='train',
             summary_val=cur_summary,
             summary_writer=summary_writer)
+
+    def inference_epoch(self, sess, dataflow, save_path=None):
+        dataflow.reset_epochs_completed()
+
+        # embedding_all = np.empty((0, self.embedding_dim))
+        # label_all = np.empty((0))
+        # filename_all = np.empty((0))
+
+        embedding_all = []
+        # label_all = []
+        # filename_all = []
+
+        step = 0
+        print(dataflow.epoch_step)
+        bar = progressbar.ProgressBar(maxval=dataflow.epoch_step + 2, \
+        widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+        bar.start()
+
+        while dataflow.epochs_completed < 1:
+            step += 1
+            bar.update(step)
+            batch_data = dataflow.next_batch_dict()
+            embedding = sess.run(
+                self.embedding,
+                feed_dict={self.image: batch_data['im']})
+
+            # embedding_all = np.concatenate((embedding_all, embedding), axis=0)
+            # label_all = np.concatenate((label_all, batch_data['label']), axis=0)
+            # filename_all = np.concatenate((batch_data['filename'], batch_data['filename']), axis=0)
+
+            # embedding_all += list(embedding)
+            # label_all += list(batch_data['label'])
+            # filename_all += list(batch_data['filename'])
+            embedding_all.append(embedding)
+            # label_all.append(batch_data['label'])
+            # filename_all.append(batch_data['filename'])
+
+
+        bar.finish()
+        embedding_all = np.vstack(embedding_all)
+        # label_all = np.hstack(label_all)
+        # filename_all = np.hstack(filename_all)
+
+        return np.array(embedding_all)
+
+        
+
+        # print(loss_sum / step)
+        # if save_path is not None and self.embedding_dim == 2:
+        #     import os
+        #     save_dir = os.path.join(save_path, 'embedding_{}'.format(self.epoch_id))
+        #     viz.viz_embedding(embedding=embedding_all, labels=label_all, save_dir=save_dir)
 
 
 

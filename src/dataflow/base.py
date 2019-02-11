@@ -8,14 +8,14 @@ import numpy as np
 import src.utils.dataflow as dfutil
 
 
-class DataflowBaseChild(object):
+class DataflowBase(object):
     def __init__(self,
-                 im_list,
-                 label_list,
+                 data_dir,
                  batch_dict_name=None,
                  shuffle=True,
                  pf=dfutil.identity):
 
+        self._data_dir = data_dir
         self._shuffle = shuffle
         self._pf = pf
 
@@ -24,20 +24,23 @@ class DataflowBaseChild(object):
         self._batch_dict_name = batch_dict_name
 
         self.rng = dfutil.get_rng(self)
-        self._prepare_data(im_list, label_list)
+        self._prepare_data()
         self.setup(epoch_val=0, batch_size=1)
+
+    def _load_data(self):
+        raise NotImplementedError()
+
+    def _prepare_data(self):
+        im_list, label_list = self._load_data()
+        self.im_list = np.array(im_list)
+        self.label_list = np.array(label_list)
+        self._shuffle_files()
 
     def next_batch_dict(self):
         batch_data = self.next_batch()
         data_dict = {key: data for key, data
                      in zip(self._batch_dict_name, batch_data)}
         return data_dict
-
-    def _prepare_data(self, im_list, label_list):
-        assert len(im_list) == len(label_list)
-        self.im_list = np.array(im_list)
-        self.label_list = np.array(label_list)
-        self._shuffle_files()
 
     def _shuffle_files(self):
         if self._shuffle:
@@ -77,16 +80,108 @@ class DataflowBaseChild(object):
         end = self._image_id
         batch_im = self._read_batch_im(self.im_list[start:end])
         batch_label = self.label_list[start:end]
+        batch_file_name = self.im_list[start:end]
 
         if self._image_id > self.size():
             self._epochs_completed += 1
             self._image_id = 0
             self._shuffle_files()
 
-        return [np.array(batch_im), np.array(batch_label)]
+        return [np.array(batch_im), np.array(batch_label), np.array(batch_file_name)]
 
     def _read_batch_im(self, batch_file_list):
         raise NotImplementedError
+
+    @property
+    def epoch_step(self):
+        return int(self.size() / self._batch_size)
+
+class DataflowBaseChild(DataflowBase):
+    def __init__(self,
+                 im_list,
+                 label_list,
+                 batch_dict_name=None,
+                 shuffle=True,
+                 pf=dfutil.identity):
+
+        self._shuffle = shuffle
+        self._pf = pf
+
+        if not isinstance(batch_dict_name, list):
+            batch_dict_name = [batch_dict_name]
+        self._batch_dict_name = batch_dict_name
+
+        self.rng = dfutil.get_rng(self)
+        self._prepare_data(im_list, label_list)
+        self.setup(epoch_val=0, batch_size=1)
+
+    def _prepare_data(self, im_list, label_list):
+        assert len(im_list) == len(label_list)
+        self.im_list = np.array(im_list)
+        self.label_list = np.array(label_list)
+        self._shuffle_files()
+
+    # def next_batch_dict(self):
+    #     batch_data = self.next_batch()
+    #     data_dict = {key: data for key, data
+    #                  in zip(self._batch_dict_name, batch_data)}
+    #     return data_dict
+
+    
+
+    # def _shuffle_files(self):
+    #     if self._shuffle:
+    #         n_sample = self.size()
+    #         sample_idxs = np.arange(n_sample)
+    #         self.rng.shuffle(sample_idxs)
+    #         self.im_list = self.im_list[sample_idxs]
+    #         self.label_list = self.label_list[sample_idxs]
+
+    # def setup(self, epoch_val, batch_size, **kwargs):
+    #     self._image_id = 0
+    #     self._epochs_completed = epoch_val
+    #     self._batch_size = batch_size
+    #     assert self._batch_size <= self.size(), \
+    #         "batch_size {} cannot be larger than data size {}".\
+    #         format(self._batch_size, self.size())
+    #     try:
+    #         self._shuffle_files()
+    #     except AttributeError:
+    #         pass
+
+    # def size(self):
+    #     return len(self.im_list)
+
+    # @property
+    # def epochs_completed(self):
+    #     return self._epochs_completed
+
+    # def reset_epochs_completed(self):
+    #     self._image_id = 0
+    #     self._epochs_completed = 0
+
+    # def next_batch(self):
+
+    #     start = self._image_id
+    #     self._image_id += self._batch_size
+    #     end = self._image_id
+    #     batch_im = self._read_batch_im(self.im_list[start:end])
+    #     batch_label = self.label_list[start:end]
+    #     batch_file_name = self.im_list[start:end]
+
+    #     if self._image_id > self.size():
+    #         self._epochs_completed += 1
+    #         self._image_id = 0
+    #         self._shuffle_files()
+
+    #     return [np.array(batch_im), np.array(batch_label), np.array(batch_file_name)]
+
+    # def _read_batch_im(self, batch_file_list):
+    #     raise NotImplementedError
+
+    # @property
+    # def epoch_step(self):
+    #     return int(self.size() / self._batch_size)
 
 
 class DataflowBaseTriplet(object):
@@ -157,10 +252,10 @@ class DataflowBaseTriplet(object):
         self._sample_n_class = sample_n_class
         self._sample_n_class = np.minimum(self._sample_n_class, self._n_class)
         self._sample_per_class = sample_per_class
-        for class_id in range(0, self._n_class):
-            assert self._sample_per_class <= self.size(class_id), \
-                "sample_per_class {} cannot be larger than data size {}".\
-                format(self._sample_per_class, self.size(class_id))
+        # for class_id in range(0, self._n_class):
+        #     assert self._sample_per_class <= self.size(class_id), \
+        #         "sample_per_class {} cannot be larger than data size {}".\
+        #         format(self._sample_per_class, self.size(class_id))
         try:
             self._shuffle_files()
         except AttributeError:

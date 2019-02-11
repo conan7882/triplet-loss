@@ -10,8 +10,9 @@ import sys
 import skimage.transform
 sys.path.append('../')
 from src.dataflow.mnist import MNISTData
-from src.dataflow.mars import MARSTriplet, MARSChild
+from src.dataflow.mars import MARSTriplet, MARSChild, MARS
 from src.dataflow.testset import prepare_query_gallery
+from src.dataflow.market import MarketTriplet
 
 
 def loadMNIST(data_dir='', sample_per_class=12):
@@ -38,12 +39,11 @@ def loadMNIST(data_dir='', sample_per_class=12):
 
     return train_data, valid_data
 
-def loadMARS(data_dir='', sample_per_class=4, rescale_im=[128, 64]):
+def loadMARSTrain(data_dir='', sample_per_class=4, rescale_im=[128, 64], batch_size=256):
     def normalize_im(im):
         im = skimage.transform.resize(
             im, rescale_im,
             mode='constant', preserve_range=True)
-
         return np.clip(im/255.0, 0., 1.)
 
     train_dir = os.path.join(data_dir, 'bbox_train')
@@ -55,24 +55,62 @@ def loadMARS(data_dir='', sample_per_class=4, rescale_im=[128, 64]):
         pf=normalize_im)
     train_data.setup(epoch_val=0, sample_n_class=32, sample_per_class=sample_per_class)
 
-    valid_dir = os.path.join(data_dir, 'bbox_test')
-    # valid_data = MARSTriplet(
-    #     'test',
-    #     n_class=None,
-    #     data_dir=valid_dir,
-    #     batch_dict_name=['im', 'label'],
-    #     shuffle=True,
-    #     pf=normalize_im)
-    # valid_data.setup(epoch_val=0, sample_n_class=32, sample_per_class=sample_per_class)
+    # valid_dir = os.path.join(data_dir, 'bbox_test')
+    # # valid_data = MARSTriplet(
+    # #     'test',
+    # #     n_class=None,
+    # #     data_dir=valid_dir,
+    # #     batch_dict_name=['im', 'label'],
+    # #     shuffle=True,
+    # #     pf=normalize_im)
+    # # valid_data.setup(epoch_val=0, sample_n_class=32, sample_per_class=sample_per_class)
 
-    query_data, gallery_data = prepare_query_gallery(
-        TripletDataFlow=MARSTriplet,
-        ChildDataFlow=MARSChild,
-        data_dir=valid_dir,
+    # query_data, gallery_data = prepare_query_gallery(
+    #     TripletDataFlow=MARSTriplet,
+    #     ChildDataFlow=MARSChild,
+    #     data_dir=valid_dir,
+    #     batch_dict_name=['im', 'label', 'filename'],
+    #     batch_size=batch_size,
+    #     shuffle=True,
+    #     pf=normalize_im,
+    #     query_ratio=0.3)
+
+    return train_data
+
+def loadMARSInference(data_dir='', rescale_im=[128, 64], batch_size=1):
+
+    def normalize_im(im):
+        im = skimage.transform.resize(
+            im, rescale_im,
+            mode='constant', preserve_range=True)
+        return np.clip(im/255.0, 0., 1.)
+
+    test_dir = os.path.join(data_dir, 'bbox_test')
+    dataflow = MARS(data_dir=test_dir,
+                    batch_dict_name=['im', 'label'],
+                    shuffle=False,
+                    pf=normalize_im)
+    dataflow.setup(epoch_val=0, batch_size=batch_size)
+
+    return dataflow
+
+def loadMarketTrain(data_dir='', sample_per_class=4, rescale_im=[128, 64]):
+    def normalize_im(im):
+        im = skimage.transform.resize(
+            im, rescale_im,
+            mode='constant', preserve_range=True)
+        return np.clip(im/255.0, 0., 1.)
+
+    train_dir = os.path.join(data_dir, 'bounding_box_train')
+    train_data = MarketTriplet(
+        n_class=None,
+        data_dir=train_dir,
         batch_dict_name=['im', 'label'],
         shuffle=True,
-        pf=normalize_im,
-        query_ratio=0.3)
+        pf=normalize_im)
+    train_data.setup(epoch_val=0, sample_n_class=32, sample_per_class=sample_per_class)
+    return train_data
 
-    return train_data, query_data, gallery_data
+
+
     
