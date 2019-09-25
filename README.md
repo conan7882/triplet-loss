@@ -61,9 +61,9 @@ Row 2: Left: statistics of embedding entries; Right: statistics of 2-norm of emb
 ![result1](docs/query_6.png)
 ![result2](docs/query_7.png)
 
-### Train and inference embedding for person re-identification on [Market-1501 Dataset](http://www.liangzheng.org/Project/project_reid.html)
+### Train and inference embedding for person re-identification on [Market-1501 Dataset](http://www.liangzheng.com.cn/Datasets.html)
 #### Preparation
-- Download the dataset from [here](http://www.liangzheng.org/Project/project_reid.html).
+- Download the dataset from [here](http://www.liangzheng.com.cn/Datasets.html).
 - Setup in [`experiment/config.py`](experiment/config.py):
 - `market_dir` - directory of dataset.
 - `market_save_path` - directory of saving results.
